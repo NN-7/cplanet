@@ -1,52 +1,101 @@
 #include <curses.h>
 #include <stdio.h>
-#define PLANET_WIDTH 12
-#define PLANET_HEIGHT 11
+#include <stdlib.h>
+#include <string.h>
+#define PLANET_WIDTH 8
+#define PLANET_HEIGHT 5
 #define PALETTE_SIZE 5
 #define RADIUS 2.5
-#define b 1
-#define a 1
 
+typedef struct {
+    int palette_size;
+    int height;
+    int width;
+    int* palette; // an array of pallete_size many ints that print as ncurses chars
+    int* map; // an array of planet_height*planet_width ints representing indexes into the palette
+    
+} planet_t;
 
-int
-main (void) {
-  initscr ();
-  start_color ();
-  cbreak ();
-  keypad (stdscr, TRUE);
-  nodelay (stdscr, TRUE);
-  noecho ();
-  clear ();
-  int hight, width;
-  getmaxyx (stdscr, hight, width);
-  int x = 0, y = 0;
-  move (2, 2);
-  getyx (stdscr, y, x);
-  int palette[PALETTE_SIZE] = {'x', 'x', 'x', 'x', 'x'};
-  int planet[PLANET_HEIGHT][PLANET_WIDTH] = {{4,4,4,4,4,4,4,4},
-                        {1,0,0,1,0,2,1,0},
-                        {0,1,0,2,2,3,2,1},
-                        {1,1,0,1,2,3,3,1},
-                        {4,4,4,4,4,4,4,4}};
-  
-  for(int y=0; y<PLANET_HEIGHT; y++){
-    for(int x=0; x<PLANET_WIDTH; x++){
-      move(y, x);
-      if(RADIUS*RADIUS <= (1*y-+5)*(2*y-+5)+(1*x-+8)*(1*x-+2)){
-        addch('/');
-      }else{
-          addch(palette[planet[y][x]]);
+int init_planet(planet_t* planet, int palette_size, int width, int height){
+    planet->palette_size = palette_size;
+    planet->width = width;
+    planet->height = height;
+    planet->palette = malloc(sizeof(int) * palette_size);
+    if(planet->palette == 0){
+        return 0;
     }
-      //addch(palette[planet[y][x]]);
+    planet->map = malloc(sizeof(int) * height * width);
+    if(planet->map == 0){
+        free(planet->palette);
+        return 0;
     }
-  }
-  /*
-  while((PLANET_WIDTH+PLANET_HEIGHT)/2 <= x*x + y*y){
-  	addch('/');
-  	refresh();
-  }
-  /**/
-  refresh();
+    for(int i = 0; i < planet->palette_size; i++){
+        planet->palette[i] = 0;
+    }
+    for(int i = 0; i < width*height; i++){
+        planet->map[i] = 0;
+    }
+    return 1;
 }
 
+void destroy_planet(planet_t* planet){
+    free(planet->palette);
+    free(planet->map);
+}
 
+int in_elipse(
+        double x, 
+        double y, 
+        double r, 
+        double x_off, 
+        double y_off, 
+        double x_strech, 
+        double y_strech){
+    return r*r <= (y_strech*y-y_off)*(y_strech*y-y_off)+(x_strech*x-x_off)*(x_strech*x-x_off);
+}
+
+void main (void){
+    planet_t planet;
+    init_planet(&planet, PALETTE_SIZE, PLANET_WIDTH, PLANET_HEIGHT);
+    
+    memcpy(planet.palette,
+        (int[]){'W', 'w', '.', '#', 'O'}, 
+            sizeof(int)*planet.palette_size);
+            
+    memcpy(planet.map,
+        (int[]){2, 3, 3, 3, 3, 3, 3, 2,
+                2, 0, 0, 0, 0, 0, 0, 2,
+                2, 0, 0, 0, 0, 0, 0, 2,
+                2, 0, 0, 0, 0, 0, 0, 2,
+                2, 3, 3, 3, 3, 3, 3, 2}, 
+            sizeof(int)*planet.height*planet.width);
+    
+    //printf("%d %d %d %d %d\n", planet.palette[0], planet.palette[1], planet.palette[2], planet.palette[3], planet.palette[4]);
+
+    initscr ();
+    //start_color ();
+    cbreak ();
+    keypad (stdscr, TRUE);
+    nodelay (stdscr, TRUE);
+    noecho ();
+    clear ();
+    int hight, width;
+    getmaxyx (stdscr, hight, width);
+    
+    int x, y;
+    getyx (stdscr, y, x);
+    
+    move (2, 2);
+    
+    for (int y = 0; y < PLANET_HEIGHT; y++){
+        for (int x = 0; x < PLANET_WIDTH; x++){
+            move (y, x);
+            if (in_elipse(x, y, 4, 0, 0, 1, 1)){
+                addch ('/');
+            }else{
+                addch(planet.palette[planet.map[x+y*planet.width]]);
+            }
+        }
+    }
+    refresh();
+}
