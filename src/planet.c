@@ -2,10 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #define PLANET_WIDTH 8
 #define PLANET_HEIGHT 5
 #define PALETTE_SIZE 5
 #define RADIUS 2.5
+
+/*
+
+*/
 
 typedef struct {
     int palette_size;
@@ -59,7 +64,7 @@ void main (void){
     init_planet(&planet, PALETTE_SIZE, PLANET_WIDTH, PLANET_HEIGHT);
     
     memcpy(planet.palette,
-        (int[]){'W', 'w', '.', '#', 'O'}, 
+        (int[]){' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4)}, 
             sizeof(int)*planet.palette_size);
             
     memcpy(planet.map,
@@ -73,7 +78,22 @@ void main (void){
     //printf("%d %d %d %d %d\n", planet.palette[0], planet.palette[1], planet.palette[2], planet.palette[3], planet.palette[4]);
 
     initscr ();
-    //start_color ();
+    if(!has_colors()){
+        endwin();
+        printf("Your terminal doesn't support color");
+        exit(1);
+    }
+    start_color ();
+    //implementing color pairs
+    init_pair(0, COLOR_WHITE, COLOR_BLACK);
+    init_pair(1, COLOR_BLACK, COLOR_RED);
+    init_pair(2, COLOR_BLACK, COLOR_GREEN);
+    init_pair(3, COLOR_BLACK, COLOR_YELLOW);
+    init_pair(4, COLOR_BLACK, COLOR_BLUE);
+    init_pair(5, COLOR_BLACK, COLOR_MAGENTA);
+    init_pair(6, COLOR_BLACK, COLOR_CYAN);
+    init_pair(7, COLOR_BLACK, COLOR_WHITE);
+    //done implementing color pairs
     cbreak ();
     keypad (stdscr, TRUE);
     nodelay (stdscr, TRUE);
@@ -86,16 +106,21 @@ void main (void){
     getyx (stdscr, y, x);
     
     move (2, 2);
-    
-    for (int y = 0; y < PLANET_HEIGHT; y++){
-        for (int x = 0; x < PLANET_WIDTH; x++){
-            move (y, x);
-            if (in_elipse(x, y, 4, 0, 0, 1, 1)){
-                addch ('/');
-            }else{
-                addch(planet.palette[planet.map[x+y*planet.width]]);
+    int offset = 0;
+    while(1){
+        for (int y = 0; y < PLANET_HEIGHT; y++){
+            for (int x = 0; x < PLANET_WIDTH; x++){
+                move (y, x);
+                if (in_elipse(x, y, 5, 2, 0, 1, 1)){
+                    addch ('/');
+                }else{
+                    addch(planet.palette[planet.map[(x+offset)%planet.width+y*planet.width]]);
+                }
             }
         }
+        refresh();
+        sleep(1);
+        offset += 1;
     }
-    refresh();
+    endwin();
 }
