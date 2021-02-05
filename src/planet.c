@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#define PLANET_WIDTH 8
-#define PLANET_HEIGHT 5
+#define PLANET_WIDTH 9
+#define PLANET_HEIGHT 7
 #define PALETTE_SIZE 5
 #define RADIUS 2.5
 
@@ -64,15 +64,17 @@ void main (void){
     init_planet(&planet, PALETTE_SIZE, PLANET_WIDTH, PLANET_HEIGHT);
     
     memcpy(planet.palette,
-        (int[]){' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(4)}, 
+        (int[]){' ' | COLOR_PAIR(4), ' ' | COLOR_PAIR(2), ' ' | COLOR_PAIR(1), ' ' | COLOR_PAIR(2), ' ' | COLOR_PAIR(5)}, 
             sizeof(int)*planet.palette_size);
             
     memcpy(planet.map,
-        (int[]){2, 3, 3, 3, 3, 3, 3, 2,
-                2, 0, 0, 0, 0, 0, 0, 2,
-                2, 0, 0, 0, 0, 0, 0, 2,
-                2, 0, 0, 0, 0, 0, 0, 2,
-                2, 3, 3, 3, 3, 3, 3, 2}, 
+        (int[]){1, 1, 1, 1, 0, 0, 0, 0, 1,
+                1, 1, 0, 0, 0, 0, 1, 0, 0,
+                0, 0, 0, 1, 0, 0, 1, 1, 0,
+                0, 0, 1, 1, 1, 0, 1, 1, 0,
+                1, 0, 0, 1, 1, 0, 1, 0, 0,
+                1, 1, 0, 0, 1, 0, 0, 0, 1,
+                1, 1, 1, 0, 0, 0, 1, 1, 1}, 
             sizeof(int)*planet.height*planet.width);
     
     //printf("%d %d %d %d %d\n", planet.palette[0], planet.palette[1], planet.palette[2], planet.palette[3], planet.palette[4]);
@@ -111,10 +113,10 @@ void main (void){
         for (int y = 0; y < PLANET_HEIGHT; y++){
             for (int x = 0; x < PLANET_WIDTH; x++){
                 move (y, x);
-                if (in_elipse(x, y, 5, 2, 0, 1, 1)){
-                    addch ('/');
+                if (in_elipse(x, y, 2.2, 2.5, 3, 0.6, 1)){
+                    addch (' ' | COLOR_PAIR(7));
                 }else{
-                    addch(planet.palette[planet.map[(x+offset)%planet.width+y*planet.width]]);
+                addch(planet.palette[planet.map[(x+offset)%planet.width+y*planet.width]]);
                 }
             }
         }
